@@ -1,0 +1,188 @@
+Sub ValidateActions()
+
+    ' Allow user to select file path
+    Dim filePath As String
+    With Application.FileDialog(msoFileDialogFilePicker)
+        .Title = "Select Input File"
+        .Filters.Add "Excel Files", "*.xls; *.xlsx; *.xlsm", 1
+        If .Show = True Then
+            filePath = .SelectedItems(1)
+        Else
+            Exit Sub
+        End If
+    End With
+
+    ' Open the workbook
+    Dim wb As Workbook
+    Set wb = Workbooks.Open(filePath)
+
+    ' Get the worksheet
+    Dim ws As Worksheet
+    Set ws = wb.Sheets(1) ' Change sheet index if needed
+
+    ' Add "VBA Action" column
+    ws.Columns("X:X").Insert Shift:=xlToRight
+    ws.Cells(1, "Y") = "VBA Action"
+
+    ' Loop through data rows
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+
+    Dim i As Long
+    For i = 2 To lastRow
+
+        ' Get values from relevant columns (with shifted references)
+        Dim groupName As String
+        groupName = ws.Cells(i, 6) ' Column F
+
+        Dim matchingCompanyName As String
+        matchingCompanyName = ws.Cells(i, 28) ' Column AB (shifted)
+
+        Dim agentAgencyName As String
+        agentAgencyName = ws.Cells(i, 16) ' Column P
+
+        Dim matchingPartnerName As String
+        matchingPartnerName = ws.Cells(i, 30) ' Column AD (shifted)
+
+        Dim matchingConfigName As String
+        matchingConfigName = ws.Cells(i, 32) ' Column AF (shifted)
+
+        Dim matchingConfigOwner As String
+        matchingConfigOwner = ws.Cells(i, 33) ' Column AG (shifted)
+
+        Dim companyNameMatch As String
+        companyNameMatch = ws.Cells(i, 34) ' Column AH (shifted)
+
+        Dim addressMatch As String
+        addressMatch = ws.Cells(i, 35) ' Column AI (shifted)
+
+        Dim emailMatch As String
+        emailMatch = ws.Cells(i, 36) ' Column AJ (shifted)
+
+        Dim usernameMatch As String
+        usernameMatch = ws.Cells(i, 37) ' Column AK (shifted)
+
+        Dim userPhoneMatch As String
+        userPhoneMatch = ws.Cells(i, 39) ' Column AM (shifted)
+
+        ' Apply validation rules (using shifted references)
+        Dim vbaAction As String
+
+        ' Rule 1: New Client if Group Name and Matching Company Name don't match AND Company Name Match, Address Match, and Username Match are "No"
+        If groupName <> matchingCompanyName And companyNameMatch = "No" And addressMatch = "No" And usernameMatch = "No" Then
+            vbaAction = "New Client"
+        Else
+
+            ' Rule 2: New Client if Agent/Agency Name is empty and Matching Partner Name has a name
+            If agentAgencyName = "" And matchingPartnerName <> "" Then
+                vbaAction = "New Client"
+            Else
+
+                ' Rule 3: New Client if Group Name and Matching Company Name are the same, Agent/Agency Name and Matching Partner Name are the same, but Matching Config Owner contains "Select Health"
+                If groupName = matchingCompanyName And agentAgencyName = matchingPartnerName And InStr(matchingConfigOwner, "Select Health") > 0 Then
+                    vbaAction = "New Client"
+                Else
+
+                    ' Rule 4: Add-on if Agent/Agency Name matches Matching Partner Name and Group Name matches Matching Company Name
+                    If agentAgencyName = matchingPartnerName And groupName = matchingCompanyName Then
+                        vbaAction = "Add-on"
+                    Else
+
+                        ' Rule 5: Add-on if Company Name Match is "No", but Address Match and Email Match are "Yes"
+                        If companyNameMatch = "No" And addressMatch = "Yes" And emailMatch = "Yes" Then
+                            vbaAction = "Add-on"
+                        Else
+
+                            ' Rule 6: Add-on if Company Name Match is "No", but Address Match and Company Phone Match are "Yes"
+                            If companyNameMatch = "No" And addressMatch = "Yes" And companyPhoneMatch = "Yes" Then
+                                vbaAction = "Add-on"
+                            Else
+
+                                ' Rule 7: Add-on if Company Name Match and Address Match are "Yes"
+                                If companyNameMatch = "Yes" And addressMatch = "Yes" Then
+                                    vbaAction = "Add-on"
+                                Else
+
+                                    ' Rule 8: No action if Agent/Agency Name and Matching Partner Name match, but Matching Partner Name has anything with "UHC" or "United"
+                                    If agentAgencyName = matchingPartnerName And (InStr(matchingPartnerName, "UHC") > 0 Or InStr(matchingPartnerName, "United") > 0) Then
+                                        vbaAction = "No action"
+                                    Else
+
+                                        ' Rule 9: No action if Matching Partner Name has anything with "UHC" or "United" and Matching Company Name is the same as Group Name
+                                        If (InStr(matchingPartnerName, "UHC") > 0 Or InStr(matchingPartnerName, "United") > 0) And matchingCompanyName = groupName Then
+                                            vbaAction = "No action"
+                                        Else
+
+                                            ' Rule 10: No action if Agent/Agency Name and Matching Partner Name are the same and Matching Config Name contains "UHC Enhancement"
+                                            If agentAgencyName = matchingPartnerName And InStr(matchingConfigName, "UHC Enhancement") > 0 Then
+                                                vbaAction = "No action"
+                                            Else
+
+                                                ' Rule 11: Handle duplicate rows with same Group Name
+                                                Dim duplicateRow As Long
+                                                duplicateRow = FindDuplicateRow(ws, i, 6, groupName) ' Column F
+                                                If duplicateRow > 0 Then
+                                                    If InStr(ws.Cells(duplicateRow, 30), "UHC") > 0 Or InStr(ws.Cells(duplicateRow, 30), "United") > 0 Then ' Column AD
+                                                        vbaAction = "No action"
+                                                        ws.Rows(i).Interior.ColorIndex = 3 ' Highlight the other row red
+                                                    Else
+                                                        vbaAction = "Deactivate"
+                                                        ws.Cells(duplicateRow, 24) = "Add-on" ' Column X
+                                                    End If
+                                                Else
+
+                                                    ' Default action if no other rules apply
+                                                    vbaAction = ws.Cells(i, 24) ' Column X
+
+                                                End If
+
+                                            End If
+
+                                        End If
+
+                                    End If
+
+                                End If
+
+                            End If
+
+                        End If
+
+                    End If
+
+                End If
+
+            End If
+
+        End If
+
+        ' Write VBA Action to the cell
+        ws.Cells(i, 25) = vbaAction ' Column Y
+
+        ' Highlight row if Action and VBA Action don't match
+        If ws.Cells(i, 24) <> vbaAction Then ' Column X
+            ws.Rows(i).Interior.ColorIndex = 3 ' Highlight red
+        End If
+
+    Next i
+
+    ' Save and close the workbook
+    wb.Save
+    wb.Close
+
+End Sub
+
+' Function to find duplicate rows based on a column value (no change needed)
+Function FindDuplicateRow(ws As Worksheet, currentRow As Long, colNumber As Long, value As String) As Long
+
+    Dim i As Long
+    For i = currentRow + 1 To ws.Cells(ws.Rows.Count, colNumber).End(xlUp).Row
+        If ws.Cells(i, colNumber) = value Then
+            FindDuplicateRow = i
+            Exit Function
+        End If
+    Next i
+
+    FindDuplicateRow = 0
+
+End Function
