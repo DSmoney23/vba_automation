@@ -1,0 +1,89 @@
+  ' Allow user to select file path
+    Dim filePath As String
+    With Application.FileDialog(msoFileDialogFilePicker)
+        .Title = "Select Input File"
+        .Filters.Add "Excel Files", "*.xls; *.xlsx; *.xlsm", 1
+        If .Show = True Then
+            filePath = .SelectedItems(1)
+        Else
+            Exit Sub
+        End If
+    End With
+
+    ' Open the workbook
+    Dim wb As Workbook
+    Set wb = Workbooks.Open(filePath)
+
+    ' Get the worksheet
+    Dim ws As Worksheet
+    Set ws = wb.Sheets(1)  ' Change sheet index if needed
+
+    ' Add "VBA Action" column in column AA
+    ws.Columns("AA:AA").Insert Shift:=xlToRight
+    ws.Cells(1, "AA") = "VBA Action"
+
+    ' Loop through data rows
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+
+    Dim i As Long
+    For i = 2 To lastRow
+
+        ' Get values from relevant columns
+        Dim groupName As String
+        groupName = ws.Cells(i, "K")  ' Column K
+
+        Dim matchingCompanyName As String
+        matchingCompanyName = ws.Cells(i, "AE")  ' Column AE
+
+        Dim brokerAgencyName As String
+        brokerAgencyName = ws.Cells(i, "V")  ' Column V
+
+        Dim matchingPartnerName As String
+        matchingPartnerName = ws.Cells(i, "AG")  ' Column AG
+
+        Dim matchingConfigName As String
+        matchingConfigName = ws.Cells(i, "AI")  ' Column AI
+
+        Dim matchingConfigOwner As String
+        matchingConfigOwner = ws.Cells(i, "AJ")  ' Column AJ
+
+        Dim companyNameMatch As String
+        companyNameMatch = ws.Cells(i, "AK")  ' Column AK
+
+        Dim addressMatch As String
+        addressMatch = ws.Cells(i, "AL")  ' Column AL
+
+        Dim emailMatch As String
+        emailMatch = ws.Cells(i, "AM")  ' Column AM
+
+        Dim usernameMatch As String
+        usernameMatch = ws.Cells(i, "AN")  ' Column AN
+
+        Dim userPhoneMatch As String
+        userPhoneMatch = ws.Cells(i, "AP")  ' Column AP
+
+        ' Apply validation rules
+        Dim vbaAction As String
+        ' Insert logic here for determining vbaAction based on your rules...
+
+        ' Write VBA Action to the cell in column AA
+        ws.Cells(i, "AA") = vbaAction
+
+        ' Highlight row if Action in column AB and VBA Action don't match (case-insensitive)
+        If LCase(ws.Cells(i, "AB")) <> LCase(vbaAction) Then
+            ws.Rows(i).Interior.ColorIndex = 3  ' Highlight red
+        End If
+
+        ' Check for missing values in columns B, S, and T and highlight rows
+        If IsEmpty(ws.Cells(i, "B")) Or IsEmpty(ws.Cells(i, "S")) Or IsEmpty(ws.Cells(i, "T")) Then
+            ws.Rows(i).Interior.ColorIndex = 6  ' Highlight yellow
+        End If
+
+    Next i
+
+    ' Save and close the workbook
+    wb.Save
+    wb.Close
+
+End Sub
