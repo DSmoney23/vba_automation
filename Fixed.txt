@@ -1,0 +1,153 @@
+Sub ValidateActions()
+
+    ' Allow user to select file path
+    Dim filePath As String
+    With Application.FileDialog(msoFileDialogFilePicker)
+        .Title = "Select Input File"
+        .Filters.Add "Excel Files", "*.xls; *.xlsx; *.xlsm", 1
+        If .Show = True Then
+            filePath = .SelectedItems(1)
+        Else
+            Exit Sub
+        End If
+    End With
+
+    ' Open the workbook
+    Dim wb As Workbook
+    Set wb = Workbooks.Open(filePath)
+
+    ' Get the worksheet
+    Dim ws As Worksheet
+    Set ws = wb.Sheets(1) ' Change sheet index if needed
+
+    ' Add "VBA Action" column at AA
+    ws.Columns("AA:AA").Insert Shift:=xlToRight
+    ws.Cells(1, "AA") = "VBA Action"
+
+    ' Loop through data rows
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+
+    ' Sort by Customer ID (Column B)
+    ws.Sort.SortFields.Clear
+    ws.Sort.SortFields.Add Key:=Range("B:B"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+    With ws.Sort
+        .SetRange Range("A1:AP" & lastRow) ' Adjust range if needed
+        .Header = xlYes
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+
+    Dim i As Long
+    For i = 2 To lastRow
+
+        ' Get values from relevant columns
+        Dim groupName As String
+        groupName = ws.Cells(i, "K") 
+
+        Dim matchingCompanyName As String
+        matchingCompanyName = ws.Cells(i, "AE") 
+
+        Dim brokerAgencyName As String
+        brokerAgencyName = ws.Cells(i, "V") 
+
+        Dim matchingPartnerName As String
+        matchingPartnerName = ws.Cells(i, "AG") 
+
+        Dim matchingConfigName As String
+        matchingConfigName = ws.Cells(i, "AI") 
+
+        Dim matchingConfigOwner As String
+        matchingConfigOwner = ws.Cells(i, "AJ") 
+
+        Dim companyNameMatch As String
+        companyNameMatch = ws.Cells(i, "AK") 
+
+        Dim addressMatch As String
+        addressMatch = ws.Cells(i, "AL") 
+
+        Dim emailMatch As String
+        emailMatch = ws.Cells(i, "AM") 
+
+        Dim usernameMatch As String
+        usernameMatch = ws.Cells(i, "AN") 
+
+        Dim userPhoneMatch As String
+        userPhoneMatch = ws.Cells(i, "AP") 
+
+        ' Apply validation rules
+        Dim vbaAction As String
+
+        If LCase(matchingConfigOwner) Like "*select health*" Then
+            vbaAction = "New Client"
+        ElseIf LCase(matchingPartnerName) Like "*unitedhealthcare*" Then
+            vbaAction = "No action"
+        ElseIf InStr(matchingConfigName, "UHC Enhancement") > 0 Then
+            vbaAction = "No action"
+        ElseIf groupName <> matchingCompanyName And companyNameMatch = "No" And addressMatch = "No" And usernameMatch = "No" Then
+            vbaAction = "New Client"
+        ElseIf brokerAgencyName = "" And matchingPartnerName <> "" Then
+            vbaAction = "New Client"
+        ElseIf groupName = matchingCompanyName And brokerAgencyName = matchingPartnerName And InStr(matchingConfigOwner, "Select Health") > 0 Then
+            vbaAction = "New Client"
+        ElseIf brokerAgencyName = matchingPartnerName And groupName = matchingCompanyName Then
+            vbaAction = "Add-on"
+        ElseIf companyNameMatch = "No" And addressMatch = "Yes" And emailMatch = "Yes" Then
+            vbaAction = "Add-on"
+        ElseIf companyNameMatch = "No" And addressMatch = "Yes" And userPhoneMatch = "Yes" Then
+            vbaAction = "Add-on"
+        ElseIf companyNameMatch = "Yes" And addressMatch = "Yes" Then
+            vbaAction = "Add-on"
+        Else
+            ' Default action if no other rules apply
+            vbaAction = "Review" 
+        End If
+
+        ' Rule for Deactivation based on duplicate Customer ID and UnitedHealthcare
+        Dim duplicateRow As Long
+        duplicateRow = FindDuplicateRow(ws, i, "B", ws.Cells(i, "B").Value) 
+        If duplicateRow > 0 Then
+            If ws.Cells(duplicateRow, "AG") Like "*UnitedHealth*" Then 
+                vbaAction = "Deactivate"
+            Else
+                vbaAction = "Add-on"
+            End If
+        End If
+
+        ' Write VBA Action to the cell
+        ws.Cells(i, "AA") = vbaAction 
+
+        ' Highlight row if Action and VBA Action don't match (case-insensitive)
+        If LCase(ws.Cells(i, "AB")) <> LCase(vbaAction) Then 
+            ws.Rows(i).Interior.ColorIndex = 3 
+        End If
+
+        ' Check for missing values and highlight rows
+        If IsEmpty(ws.Cells(i, "B")) Or IsEmpty(ws.Cells(i, "S")) Or IsEmpty(ws.Cells(i, "T")) Then
+            ws.Rows(i).Interior.ColorIndex = 6 
+        End If
+
+    Next i
+
+    ' Save and close the workbook
+    wb.Save
+    wb.Close
+
+End Sub
+
+' Function to find duplicate rows based on a column value (modified for column letter)
+Function FindDuplicateRow(ws As Worksheet, currentRow As Long, colLetter As String, value As String) As Long
+
+    Dim i As Long
+    For i = currentRow + 1 To ws.Cells(ws.Rows.Count, colLetter).End(xlUp).Row
+        If ws.Cells(i, colLetter) = value Then
+            FindDuplicateRow = i
+            Exit Function
+        End If
+    Next i
+
+    FindDuplicateRow = 0
+
+End Function
