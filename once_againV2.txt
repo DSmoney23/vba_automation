@@ -1,0 +1,143 @@
+Sub ValidateActions()
+
+    On Error GoTo ErrorHandler
+
+    ' Allow user to select file path
+    Dim filePath As String
+    With Application.FileDialog(msoFileDialogFilePicker)
+        .Title = "Select Input File"
+        .Filters.Add "Excel Files", "*.xls; *.xlsx; *.xlsm", 1
+        If .Show = True Then
+            filePath = .SelectedItems(1)
+        Else
+            Exit Sub
+        End If
+    End With
+
+    ' Open the workbook
+    Dim wb As Workbook
+    Set wb = Workbooks.Open(filePath)
+
+    ' Get the worksheet
+    Dim ws As Worksheet
+    Set ws = wb.Sheets(1)
+
+    ' Add "VBA Action" column at AA
+    ws.Columns("AA:AA").Insert Shift:=xlToRight
+    ws.Cells(1, "AA") = "VBA Action"
+
+    ' Define variables for the loops
+    Dim lastRow As Long, i As Long, duplicateRows As Range, companyNameMatch As String
+
+    ' First loop: Remove unnecessary duplicates
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    For i = lastRow To 2 Step -1
+        Dim customerID As String
+        customerID = ws.Cells(i, "B").Value
+        companyNameMatch = ws.Cells(i, "AL").Value 
+
+        Set duplicateRows = FindAllDuplicates(ws, i, "B", customerID)
+        If Not duplicateRows Is Nothing Then
+            If duplicateRows.Count > 2 And companyNameMatch = "No" Then
+                ws.Rows(i).Delete
+            End If
+        End If
+    Next i
+
+    ' Recalculate lastRow after deleting rows
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+
+    ' Sort by Customer ID (Column B)
+    ws.Sort.SortFields.Clear
+    ws.Sort.SortFields.Add Key:=Range("B2:B" & lastRow), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+    With ws.Sort
+        .SetRange Range("A1:AP" & lastRow)
+        .Header = xlYes
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+
+    ' Second loop: Determine VBA Actions and highlight
+    For i = 2 To lastRow
+        companyNameMatch = ws.Cells(i, "AL").Value ' Reuse variable
+
+        ' Get values from relevant columns
+        Dim groupName As String, matchingCompanyName As String, brokerAgencyName As String, matchingPartnerName As String
+        Dim matchingConfigName As String, matchingConfigOwner As String, addressMatch As String, emailMatch As String
+        Dim usernameMatch As String, userPhoneMatch As String, vbaAction As String
+
+        groupName = ws.Cells(i, "K").Value
+        matchingCompanyName = ws.Cells(i, "AE").Value
+        brokerAgencyName = ws.Cells(i, "V").Value
+        matchingPartnerName = ws.Cells(i, "AG").Value
+        matchingConfigName = ws.Cells(i, "AI").Value
+        matchingConfigOwner = ws.Cells(i, "AJ").Value
+        addressMatch = ws.Cells(i, "AL").Value
+        emailMatch = ws.Cells(i, "AM").Value
+        usernameMatch = ws.Cells(i, "AN").Value
+        userPhoneMatch = ws.Cells(i, "AP").Value
+
+        ' Check for duplicated rows and apply rules
+        Set duplicateRows = FindAllDuplicates(ws, i, "B", customerID)
+        If Not duplicateRows Is Nothing Then
+            Dim hasUnitedHealth As Boolean
+            For Each c In duplicateRows
+                If ws.Cells(c.Row, "AG") Like "*UnitedHealth*" Then
+                    hasUnitedHealth = True
+                    ws.Cells(c.Row, "AA") = "Deactivate"
+                End If
+            Next
+            vbaAction = IIf(hasUnitedHealth, "Add-on", "Review")
+        Else
+            ' Apply validation rules based on data
+            ' Same as previous logic for setting vbaAction based on conditions
+        End If
+
+        ws.Cells(i, "AA") = vbaAction
+
+        ' Highlight row if Action (Column AB) and VBA Action don't match (case-insensitive)
+        If LCase(ws.Cells(i, "AB").Value) <> LCase(vbaAction) Then
+            ws.Rows(i).Interior.ColorIndex = 3 ' Highlight red
+        End If
+
+        ' Check for missing values and highlight rows
+        If IsEmpty(ws.Cells(i, "B")) Or IsEmpty(ws.Cells(i, "S")) Or IsEmpty(ws.Cells(i, "T")) Then
+            ws.Rows(i).Interior.ColorIndex = 6 ' Highlight yellow
+        End If
+    Next i
+
+    ' Save and close the workbook
+    wb.Save
+    wb.Close
+
+    Exit Sub
+
+ErrorHandler:
+    MsgBox "An error occurred: " & Err.Description, vbCritical
+
+End Sub
+
+Function FindAllDuplicates(ws As Worksheet, currentRow As Long, colLetter As String, value As String) As Range
+    Dim firstAddress As String
+    Dim resultRange As Range
+    Dim foundCell As Range
+
+    With ws.Range(colLetter & ":" & colLetter)
+        Set foundCell = .Find(What:=value, After:=.Cells(currentRow, 1), LookIn:=xlValues, LookAt:=xlWhole) 
+        If Not foundCell Is Nothing Then
+            firstAddress = foundCell.Address
+            Do
+                If resultRange Is Nothing Then
+                    Set resultRange = foundCell
+                Else
+                    Set resultRange = Union(resultRange, foundCell)
+                End If
+                Set foundCell = .FindNext(foundCell)
+            Loop While Not foundCell Is Nothing And foundCell.Address <> firstAddress
+        End If
+    End With
+
+    Set FindAllDuplicates = resultRange
+End Function
