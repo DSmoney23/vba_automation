@@ -1,0 +1,128 @@
+Sub ValidateActions()
+
+    ' Allow user to select file path
+    Dim filePath As String
+    With Application.FileDialog(msoFileDialogFilePicker)
+        .Title = "Select Input File"
+        .Filters.Add "Excel Files", "*.xls; *.xlsx; *.xlsm", 1
+        If .Show = True Then
+            filePath = .SelectedItems(1)
+        Else
+            Exit Sub
+        End If
+    End With
+
+    ' Open the workbook
+    Dim wb As Workbook
+    Set wb = Workbooks.Open(filePath)
+
+    ' Get the worksheet
+    Dim ws As Worksheet
+    Set ws = wb.Sheets(1) ' Change sheet index if needed
+
+    ' Add "VBA Action" column at AA
+    ws.Columns("AA:AA").Insert Shift:=xlToRight
+    ws.Cells(1, "AA") = "VBA Action"
+
+    ' Calculate last row (used for sorting range)
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+
+    ' Sort by Customer ID (Column B) in ascending order
+    ws.Sort.SortFields.Clear
+    ws.Sort.SortFields.Add Key:=Range("B:B"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+    With ws.Sort
+        .SetRange Range("A1:AP" & lastRow) ' Adjust range if needed
+        .Header = xlYes
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+
+    ' Loop through data rows
+    Dim i As Long
+    For i = 2 To lastRow
+
+        ' Get values from relevant columns
+        Dim groupName As String
+        groupName = ws.Cells(i, "K") ' Now column K
+
+        Dim matchingCompanyName As String
+        matchingCompanyName = ws.Cells(i, "AE") ' Changed from AD to AE
+
+        Dim brokerAgencyName As String
+        brokerAgencyName = ws.Cells(i, "V") ' Now column V
+
+        Dim matchingPartnerName As String
+        matchingPartnerName = ws.Cells(i, "AG") ' Changed from AF to AG
+
+        Dim matchingConfigName As String
+        matchingConfigName = ws.Cells(i, "AI") ' Changed from AH to AI
+
+        Dim matchingConfigOwner As String
+        matchingConfigOwner = ws.Cells(i, "AJ") ' Changed from AI to AJ
+
+        Dim companyNameMatch As String
+        companyNameMatch = ws.Cells(i, "AK") ' Changed from AJ to AK
+
+        Dim addressMatch As String
+        addressMatch = ws.Cells(i, "AL") ' Changed from AK to AL
+
+        Dim emailMatch As String
+        emailMatch = ws.Cells(i, "AM") ' Changed from AL to AM
+
+        Dim usernameMatch As String
+        usernameMatch = ws.Cells(i, "AN") ' Changed from AM to AN
+
+        Dim userPhoneMatch As String
+        userPhoneMatch = ws.Cells(i, "AP") ' Changed from AO to AP
+
+        ' Apply validation rules
+        Dim vbaAction As String
+
+        If LCase(matchingConfigOwner) Like "*select health*" Then
+            vbaAction = "New Client"
+        ElseIf LCase(matchingPartnerName) Like "*unitedhealthcare*" Then
+            vbaAction = "No action"
+        ElseIf InStr(matchingConfigName, "UHC Enhancement") > 0 Then
+            vbaAction = "No action"
+        ElseIf groupName <> matchingCompanyName And companyNameMatch = "No" And addressMatch = "No" And usernameMatch = "No" Then
+            vbaAction = "New Client"
+        ElseIf brokerAgencyName = "" And matchingPartnerName <> "" Then
+            vbaAction = "New Client"
+        ElseIf groupName = matchingCompanyName And brokerAgencyName = matchingPartnerName And InStr(matchingConfigOwner, "Select Health") > 0 Then
+            vbaAction = "New Client"
+        ElseIf brokerAgencyName = matchingPartnerName And groupName = matchingCompanyName Then
+            vbaAction = "Add-on"
+        ElseIf companyNameMatch = "No" And addressMatch = "Yes" And emailMatch = "Yes" Then
+            vbaAction = "Add-on"
+        ElseIf companyNameMatch = "No" And addressMatch = "Yes" And userPhoneMatch = "Yes" Then
+            vbaAction = "Add-on"
+        ElseIf companyNameMatch = "Yes" And addressMatch = "Yes" Then
+            vbaAction = "Add-on"
+        Else
+            ' Default action if no other rules apply
+            vbaAction = "Review" ' Adjust as needed
+        End If
+
+        ' Write VBA Action to the cell
+        ws.Cells(i, "AA") = vbaAction ' Column AA for VBA Action
+
+        ' Highlight row if Action and VBA Action don't match (case-insensitive)
+        If LCase(ws.Cells(i, "AA")) <> LCase(vbaAction) Then ' Column AA for checking
+            ws.Rows(i).Interior.ColorIndex = 3 ' Highlight red
+        End If
+
+        ' Check for missing values and highlight rows
+        If IsEmpty(ws.Cells(i, "B")) Or IsEmpty(ws.Cells(i, "S")) Or IsEmpty(ws.Cells(i, "T")) Then
+            ws.Rows(i).Interior.ColorIndex = 6 ' Highlight yellow
+        End If
+
+    Next i
+
+    ' Save and close the workbook
+    wb.Save
+    wb.Close
+
+End Sub
