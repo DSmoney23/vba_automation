@@ -1,0 +1,30 @@
+Function FindAllDuplicates(ws As Worksheet, currentRow As Long, colLetter As String, value As String) As Range
+    Dim firstAddress As String
+    Dim resultRange As Range
+    Dim loopCounter As Long
+    Dim foundCell As Range
+    loopCounter = 0
+
+    ' Ensure the search starts from the first cell in the column after the current row
+    With ws.Range(colLetter & "1:" & colLetter & ws.Cells(ws.Rows.Count, colLetter).End(xlUp).Row)
+        ' Start the search after the current row to ensure it does not pick the same row again
+        Set foundCell = .Find(What:=value, After:=.Cells(currentRow, 1), LookIn:=xlValues, LookAt:=xlWhole)
+        If Not foundCell Is Nothing Then
+            firstAddress = foundCell.Address
+            Do
+                If ws.Cells(currentRow, colLetter).Address <> foundCell.Address Then ' Exclude the current row explicitly
+                    If resultRange Is Nothing Then
+                        Set resultRange = foundCell
+                    Else
+                        Set resultRange = Union(resultRange, foundCell)
+                    End If
+                End If
+                Set foundCell = .FindNext(foundCell)
+                loopCounter = loopCounter + 1
+                If loopCounter > ws.Rows.Count Then Exit Do ' Safety to prevent infinite loop
+            Loop While Not foundCell Is Nothing And foundCell.Address <> firstAddress
+        End If
+    End With
+
+    Set FindAllDuplicates = resultRange
+End Function
