@@ -1,0 +1,175 @@
+Sub ValidateActions()
+
+    On Error GoTo ErrorHandler
+
+    ' Allow user to select file path
+    Dim filePath As String
+    With Application.FileDialog(msoFileDialogFilePicker)
+        .Title = "Select Input File"
+        .Filters.Add "Excel Files", "*.xls; *.xlsx; *.xlsm", 1
+        If .Show = True Then
+            filePath = .SelectedItems(1)
+        Else
+            Exit Sub
+        End If
+    End With
+
+    ' Open the workbook
+    Dim wb As Workbook
+    Set wb = Workbooks.Open(filePath)
+
+    ' Get the worksheet
+    Dim ws As Worksheet
+    Set ws = wb.Sheets(1) ' Change sheet index if needed
+
+    ' Add "VBA Action" column at AA
+    ws.Columns("AA:AA").Insert Shift:=xlToRight
+    ws.Cells(1, "AA") = "VBA Action"
+
+    ' Calculate last row (used for sorting range)
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+
+    ' Sort by Customer ID (Column B) in ascending order
+    ws.Sort.SortFields.Clear
+    ws.Sort.SortFields.Add Key:=Range("B:B"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+    With ws.Sort
+        .SetRange Range("A1:AP" & lastRow) ' Adjust range if needed
+        .Header = xlYes
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+
+    ' Loop through data rows
+    Dim i As Long
+    For i = 2 To lastRow
+
+        ' Get values from relevant columns and trim trailing spaces
+        Dim groupName As String
+        groupName = Trim(ws.Cells(i, "K").Value) 
+
+        Dim matchingCompanyName As String
+        matchingCompanyName = Trim(ws.Cells(i, "AE").Value) 
+
+        Dim brokerAgencyName As String
+        brokerAgencyName = Trim(ws.Cells(i, "V").Value) 
+
+        Dim matchingPartnerName As String
+        matchingPartnerName = Trim(ws.Cells(i, "AG").Value) 
+
+        Dim matchingConfigName As String
+        matchingConfigName = Trim(ws.Cells(i, "AI").Value) 
+
+        Dim matchingConfigOwner As String
+        matchingConfigOwner = Trim(ws.Cells(i, "AJ").Value) 
+
+        Dim companyNameMatch As String
+        companyNameMatch = Trim(ws.Cells(i, "AK").Value) 
+
+        Dim addressMatch As String
+        addressMatch = Trim(ws.Cells(i, "AL").Value) 
+
+        Dim emailMatch As String
+        emailMatch = Trim(ws.Cells(i, "AM").Value) 
+
+        Dim usernameMatch As String
+        usernameMatch = Trim(ws.Cells(i, "AN").Value) 
+
+        Dim userPhoneMatch As String
+        userPhoneMatch = Trim(ws.Cells(i, "AP").Value) 
+
+        ' Apply validation rules (using LCase for case-insensitivity)
+        Dim vbaAction As String
+
+        ' Check for duplicates and set VBA action to "Review"
+        Dim duplicateRows As Range
+        Set duplicateRows = FindAllDuplicates(ws, i, "B", ws.Cells(i, "B").Value)
+        If Not duplicateRows Is Nothing Then
+            vbaAction = "Review"  ' Set action to "Review" for duplicates
+        Else
+            ' Apply other validation rules if no duplicates
+            If LCase(matchingPartnerName) Like "*unitedhealthcare*" And LCase(companyNameMatch) = "yes" Then
+                vbaAction = "No action"
+            ElseIf LCase(matchingPartnerName) Like "*unitedhealthcare*" And LCase(companyNameMatch) = "no" Then
+                vbaAction = "Review"
+            ElseIf LCase(matchingConfigOwner) Like "*select health*" Then
+                vbaAction = "New Client"
+            ElseIf InStr(LCase(matchingConfigName), "uhc enhancement") > 0 Then
+                vbaAction = "No action"
+            ElseIf groupName <> matchingCompanyName And LCase(companyNameMatch) = "no" And LCase(addressMatch) = "no" And LCase(usernameMatch) = "no" Then
+                vbaAction = "New Client"
+            ElseIf brokerAgencyName = "" And matchingPartnerName <> "" Then
+                vbaAction = "New Client"
+            ElseIf groupName = matchingCompanyName And brokerAgencyName = matchingPartnerName And InStr(LCase(matchingConfigOwner), "select health") > 0 Then
+                vbaAction = "New Client"
+            ElseIf brokerAgencyName = matchingPartnerName And groupName = matchingCompanyName Then
+                vbaAction = "Add-on"
+            ElseIf LCase(companyNameMatch) = "no" And LCase(addressMatch) = "yes" And LCase(emailMatch) = "yes" Then
+                vbaAction = "Add-on"
+            ElseIf LCase(companyNameMatch) = "no" And LCase(addressMatch) = "yes" And LCase(userPhoneMatch) = "yes" Then
+                vbaAction = "Add-on"
+            ElseIf LCase(companyNameMatch) = "yes" And LCase(addressMatch) = "yes" Then
+                vbaAction = "Add-on"
+            Else
+                ' Default action if no other rules apply
+                vbaAction = "Review" ' Adjust as needed
+            End If
+        End If
+
+        ' Write VBA Action to the cell
+        ws.Cells(i, "AA") = vbaAction 
+
+        ' Highlight row if Action (Column AB) and VBA Action don't match (case-insensitive)
+        If LCase(ws.Cells(i, "AB").Value) <> LCase(vbaAction) Then 
+            ws.Rows(i).Interior.ColorIndex = 3 ' Highlight red
+        End If
+
+        ' Check for missing values and highlight rows
+        If IsEmpty(ws.Cells(i, "B")) Or IsEmpty(ws.Cells(i, "S")) Or IsEmpty(ws.Cells(i, "T")) Then
+            ws.Rows(i).Interior.ColorIndex = 6 
+        End If
+
+    Next i
+
+    ' Save and close the workbook
+    wb.Save
+    wb.Close
+
+    Exit Sub
+
+ErrorHandler:
+    MsgBox "An error occurred: " & Err.Description, vbCritical
+    ' Add additional error handling or logging here
+
+End Sub
+
+' Function to find ALL duplicate rows based on a column value (with loop limit)
+Function FindAllDuplicates(ws As Worksheet, currentRow As Long, colLetter As String, value As String) As Range
+
+    Dim firstAddress As String
+    Dim resultRange As Range
+    Dim loopCounter As Long
+    loopCounter = 0
+
+    With ws.Range(colLetter & ":" & colLetter)
+        Set foundCell = .Find(What:=value, After:=.Cells(currentRow, 1), LookIn:=xlValues, LookAt:=xlWhole) 
+        If Not foundCell Is Nothing Then
+            firstAddress = foundCell.Address
+            Do
+                If resultRange Is Nothing Then
+                    Set resultRange = foundCell
+                Else
+                    Set resultRange = Union(resultRange, foundCell)
+                End If
+                Set foundCell = .FindNext(foundCell)
+                loopCounter = loopCounter + 1
+                If loopCounter > ws.Rows.Count Then Exit Do ' Exit loop if exceeding row count
+            Loop While Not foundCell Is Nothing And foundCell.Address <> firstAddress
+        End If
+    End With
+
+    Set FindAllDuplicates = resultRange
+
+End Function
