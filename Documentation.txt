@@ -1,0 +1,42 @@
+This VBA automation script is designed to process and validate data within an Excel spreadsheet, specifically focusing on identifying and handling duplicate entries, applying various validation rules, and highlighting rows based on the results. The script aims to improve data accuracy, consistency, and efficiency by automating these tasks.
+Logic and Functionality:
+File Selection and Setup:
+The script begins by allowing the user to select an Excel file using a file dialog box.
+It then opens the selected workbook and sets the first worksheet as the active sheet.
+A new column titled "VBA Action" is inserted (although not used in the final output) to temporarily store the results of the validation rules during processing.
+Data Sorting:
+The script calculates the last row of data in the worksheet.
+It sorts the data in ascending order based on the values in the "Customer ID" column (Column B). This grouping of duplicate customer IDs is crucial for the subsequent duplicate handling and validation rules.
+Duplicate Removal:
+The script loops through the data rows in reverse order (from the last row to the second row) to avoid issues when deleting rows.
+For each row, it checks for duplicates based on the "Customer ID" using the FindAllDuplicates function.
+If there are more than 2 duplicates with the same "Customer ID" and the "Company Name Match" (Column AL) for the current row is "No", the current row is deleted. This step aims to remove redundant entries where the company name doesn't match.
+After deleting rows, the lastRow variable is recalculated to ensure the correct range is used for further processing.
+Validation Rules and Highlighting:
+The script loops through each row of data to apply validation rules and determine the appropriate action.
+Duplicate Handling:
+The code checks for duplicates based on "Customer ID" using the FindAllDuplicates function. If duplicates are found, the vbaAction (which is not written to a cell but used for highlighting) is immediately set to "Review" for the current row. This ensures that all duplicates are marked for review, regardless of other conditions.
+Other Validation Rules (applied only if no duplicates are found):
+UnitedHealthcare with Company Name Match: If the "Matching Partner Name" (Column AG) contains "unitedhealthcare" and the "Company Name Match" (Column AK) is "Yes", the vbaAction is set to "No action".
+UnitedHealthcare without Company Name Match: If the "Matching Partner Name" (Column AG) contains "unitedhealthcare" and the "Company Name Match" (Column AK) is "No", the vbaAction is set to "Review".
+Select Health: If the "Matching Config Owner" (Column AJ) contains "select health" (case-insensitive), the vbaAction is set to "New Client".
+UHC Enhancement: If the "Matching Config Name" (Column AI) contains "UHC Enhancement", the vbaAction is set to "No action".
+Group Name and Matching Company Name Mismatch: If the "Group Name" (Column K) is not equal to the "Matching Company Name" (Column AE) and the "Company Name Match" (Column AK), "Address Match" (Column AL), and "Username Match" (Column AN) are all "No", the vbaAction is set to "New Client".
+Missing Broker/Agency Name: If the "Broker Agency Name" (Column V) is empty and the "Matching Partner Name" (Column AG) is not empty, the vbaAction is set to "New Client".
+Group Name, Broker/Agency Name, and Matching Config Owner: If the "Group Name" (Column K) is equal to the "Matching Company Name" (Column AE), the "Broker Agency Name" (Column V) is equal to the "Matching Partner Name" (Column AG), and the "Matching Config Owner" (Column AJ) contains "Select Health", the vbaAction is set to "New Client".
+Matching Broker/Agency and Group Name: If the "Broker Agency Name" (Column V) is equal to the "Matching Partner Name" (Column AG) and the "Group Name" (Column K) is equal to the "Matching Company Name" (Column AE), the vbaAction is set to "Add-on".
+Company Name Mismatch with Address and Email Match: If the "Company Name Match" (Column AK) is "No" and the "Address Match" (Column AL) and "Email Match" (Column AM) are both "Yes", the vbaAction is set to "Add-on".
+Company Name Mismatch with Address and User Phone Match: If the "Company Name Match" (Column AK) is "No" and the "Address Match" (Column AL) and "User Phone Match" (Column AP) are both "Yes", the vbaAction is set to "Add-on".
+Company Name and Address Match: If the "Company Name Match" (Column AK) and "Address Match" (Column AL) are both "Yes", the vbaAction is set to "Add-on".
+Default Rule: If none of the above rules apply, the vbaAction is set to "Review".
+Highlighting:
+The code compares the value in the "Action" column (Column AB) with the calculated vbaAction. If they don't match (case-insensitive comparison), the entire row is highlighted red. This helps identify rows where the manual action and the expected action based on the rules do not align.
+Additionally, the code checks for missing values in specific columns ("B", "S", "T") and highlights those rows yellow.
+Saving and Closing:
+Finally, the workbook is saved with the updated highlighting, and then it is closed.
+FindAllDuplicates Function:
+This function efficiently searches for and collects all duplicate values within a specified column, returning a range object that the main code can use to apply actions to those duplicates.
+It uses the Find and FindNext methods to locate duplicates and builds a range containing all the duplicate cells.
+A loop counter is implemented to prevent potential infinite loops in case of unexpected behavior.
+Error Handling:
+The code includes basic error handling using On Error GoTo ErrorHandler and an ErrorHandler section. This helps catch runtime errors, display an error message, and prevent the code from crashing abruptly.
