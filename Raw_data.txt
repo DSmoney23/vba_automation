@@ -1,0 +1,95 @@
+import csd as c
+import pandas as pd
+
+def pull_raw_data(start_date, end_date):
+    query = f"""
+        SELECT DISTINCT
+            t1.whse,
+            t1.pdrecno,
+            t1.orderno,
+            t1.ordersuf,
+            t1.lineno,
+            t1.invoicedt,
+            t1.enterdt,
+            INT(t1.custno) custno,
+            t2.name custname,
+            t1.shipprod prod,
+            t6.vendprod,
+            t3.descrip_1 || ' ' || t3.descrip_2 itemdesc,
+            t1.unit,
+            t1.unitconv,
+            CASE
+                WHEN t1.returnfl = 1 THEN t1.qtyship * -1
+                ELSE t1.qtyship
+            END units,
+            t1.systempdcostamt stndcost,
+            t1.prodcost avgcost_w_addons,
+            t1.replcost,
+            t1.price unitprice,
+            CASE
+                WHEN t1.returnfl = 1 THEN t1.netamt * -1
+                ELSE t1.netamt
+            END netamt,
+            t1.returnfl,
+            UPPER(t1.transtype) transtype,
+            CASE
+                WHEN UPPER(t1.specnstype) = 'N' THEN 'nonstock'
+                WHEN UPPER(t1.specnstype) = 'S' THEN 'special order'
+                WHEN UPPER(t1.specnstype) = '' THEN 'stocked'
+                ELSE 'other'
+            END prod_type,
+            NVL(t3.prodcat, 0) prodcat,
+            t4.descrip cat_descrip,
+            t1.priceorigcd,
+            t1.pdrecno,
+            INT(t1.vendno) vendno,
+            t5.name vendname,
+            t1.slsrepout,
+            t1.slsrepin
+
+        FROM oeel t1
+
+        LEFT JOIN arsc t2
+            ON t2.cono = t1.cono
+            AND t2.custno = t1.custno
+
+        LEFT JOIN icsp t3
+            ON t3.cono = t1.cono
+            AND t3.prod = t1.shipprod
+            
+        LEFT JOIN sasta t4
+            ON t4.cono = t1.cono
+            AND t4.codeval = t3.prodcat
+            AND t4.codeiden = 'C'
+            
+        LEFT JOIN apsv t5
+            ON t5.cono = t1.cono
+            AND t5.vendno = t1.vendno
+            
+        LEFT JOIN icsw t6
+            ON t6.cono = t1.cono
+            AND t6.whse = t1.whse
+            AND t1.shipprod = t6.prod
+
+        WHERE
+            t1.cono = 1
+            AND t1.invoicedt BETWEEN '{start_date}' AND '{end_date}'
+            
+        ORDER BY
+            t1.orderno,
+            t1.ordersuf,
+            t1.lineno
+
+    """
+    
+    output_df = c.run_query(query)
+        
+    output_df['total cost (avg+addons)'] = output_df['units'] * output_df['avgcost_w_addons']
+    output_df['GP$ (avg+addons)'] = (output_df['unitprice'] - output_df['avgcost_w_addons']) * output_df['units']
+    output_df['Margin (avg+addons)'] = output_df['GP$ (avg+addons)'] / output_df['netamt']
+
+    output_df['total_cost (stnd)'] = output_df['units'] * output_df['stndcost']
+    output_df['GP$ (stnd)'] = (output_df['unitprice'] - output_df['stndcost']) * output_df['units']
+    output_df['Margin (stnd)'] = output_df['GP$ (stnd)'] / output_df['netamt']
+    
+    return output_df
