@@ -1,0 +1,46 @@
+Company Element:
+companyID
+isActive
+createdBy
+createdDateOn
+modifiedBy
+modifiedDateOn
+companyName
+industry
+custom1 (with display name "Internal Contact")
+custom2 (with display name "Position/Custom")
+custom3 (with display name "Manager/Custom")
+custom4 (with display name "Special Skills / Custom")
+lastRemindedToUpdate
+
+Location Element (within Company):
+locationID
+isActive
+createdBy
+createdDateOn
+locationName
+isPrimary
+address
+address2
+city
+state
+county
+zip
+country
+
+Additional Fields (within Company):
+isHunting
+industryClassification
+isFederalContractor
+phone
+directPhone
+cellPhone
+fax
+partnerId
+ignoreCityValidation
+configurationName
+companySize
+hasBranding
+isWelcomeInsightDelivered
+isMigrated
+hasCustomerWelcomeInsightDelivered
