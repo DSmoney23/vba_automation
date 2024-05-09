@@ -1,0 +1,43 @@
+Target Field          Structure
+--------------------- ----------- 
+companyID            Company
+isActive             Company
+createdBy            Company
+createdDateOn        Company
+modifiedBy           Company
+modifiedDateOn       Company
+companyName           Company
+industry             Company
+custom1 (Internal Contact)  Company
+custom2 (Position/Custom)  Company
+custom3 (Manager/Custom)    Company
+custom4 (Special Skills / Custom) Company
+lastRemindedToUpdate    Company
+locationID           Location (nested within Company)
+isActive             Location (nested within Company)
+createdBy            Location (nested within Company)
+createdDateOn        Location (nested within Company)
+locationName          Location (nested within Company)
+isPrimary            Location (nested within Company)
+address              Location (nested within Company)
+address2             Location (nested within Company)
+city                 Location (nested within Company)
+state                Location (nested within Company)
+county               Location (nested within Company)
+zip                  Location (nested within Company)
+country              Location (nested within Company)
+hunting              Company
+industryClassification Company
+isFederalContractor   Company
+phone                Company
+directPhone           Company
+cellPhone            Company
+fax                  Company
+partnerId             Company
+ignoreCityValidation  Company
+configurationName     Company
+companySize           Company
+hasBranding           Company
+isWelcomeInsightDelivered Company
+isMigrated            Company
+hasCustomerWelcomeInsightDelivered Company
