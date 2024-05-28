@@ -1,0 +1,78 @@
+Month,Market,Submarket (if applicable),New Medical Subscribers,New Groups,Running Total for New Medical Subscribers,Running Total for New Groups
+January,Texas,-,80,35,80,35
+January,Texas,North Texas,50,20,130,55
+January,Texas,South Texas,30,15,-,-
+January,North Carolina,-,40,10,40,10
+January,River Valley,-,25,8,25,8
+February,Texas,-,140,60,220,95
+February,Texas,North Texas,60,25,-,-
+February,Texas,South Texas,80,35,250,110
+February,North Carolina,-,50,12,90,22
+February,River Valley,-,30,10,55,18
+
+Terminations:
+
+Month,Market,Submarket (if applicable),Terminations,Running Total for Terminations
+January,Texas,-,15,15
+January,Texas,North Texas,10,10
+January,Texas,South Texas,5,5
+January,North Carolina,-,8,8
+January,River Valley,-,3,3
+February,Texas,-,15,30
+February,Texas,North Texas,8,18
+February,Texas,South Texas,7,12
+February,North Carolina,-,10,18
+February,River Valley,-,5,8
+
+Bookings report:
+Month,Market,Submarket (if applicable),Net Delta Medical Subscribers,Monthly Fee,ARR for Monthly Revenue,Deviation from Contract Minimum,New Minimum Contract
+January,Texas,-,65,$2,000,$156,000,+21,240,65,000
+January,North Carolina,-,32,$1,600,$61,440,-11,320,65,000
+January,River Valley,-,22,$1,100,$31,680,-12,080,65,000
+February,Texas,-,185,$2,600,$578,400,+47,960,112,240
+February,North Carolina,-,42,$2,100,$100,800,-9,440,112,240
+February,River Valley,-,27,$1,350,$43,200,-21,320,112,240
+
+
+Documentation:
+
+Sheet 1: New Groups Prototype
+
+This sheet displays data for new medical subscribers and new groups, broken down by market and submarket. Users can toggle between viewing data by market or submarket for the Texas market. Running totals are calculated for new medical subscribers and new groups.
+
+Metrics:
+- New Medical Subscribers: Number of new medical subscribers for each market/submarket.
+- New Groups: Number of new groups for each market/submarket.
+- Running Total for New Medical Subscribers: Cumulative sum of new medical subscribers for each market/submarket.
+- Running Total for New Groups: Cumulative sum of new groups for each market/submarket.
+
+Chart Recommendations:
+- Bar Chart: Display new medical subscribers and new groups for each market/submarket.
+- Line Chart: Show trends in running totals over time.
+
+Sheet 2: Terminations Prototype
+
+This sheet displays data for terminated groups, broken down by market and submarket. Users can toggle between viewing data by market or submarket for the Texas market. Running totals are calculated for terminations.
+
+Metrics:
+- Terminations: Number of terminated groups for each market/submarket.
+- Running Total for Terminations: Cumulative sum of terminated groups for each market/submarket.
+
+Chart Recommendations:
+- Bar Chart: Display terminations for each market/submarket.
+- Line Chart: Show trends in running totals over time.
+
+Sheet 3: Bookings Report Prototype
+
+This sheet calculates net delta medical subscribers, monthly fee, and ARR for monthly revenue, broken down by market and submarket. It also tracks deviation from the contract minimum for total subscribers across all markets and displays the new minimum contract based on deviations.
+
+Metrics:
+- Net Delta Medical Subscribers: Difference between new medical subscribers and terminated subscribers for each market/submarket.
+- Monthly Fee: User-defined fee for each medical subscriber.
+- ARR for Monthly Revenue: Annual recurring revenue based on monthly fee and net delta medical subscribers.
+- Deviation from Contract Minimum: Difference between total medical subscribers and contract minimum for all markets.
+- New Minimum Contract: Updated contract minimum based on deviations.
+
+Chart Recommendations:
+- Waterfall Chart: Illustrate the deviation from the contract minimum and changes in the new minimum contract over time.
+- Line Chart: Show trends in net delta medical subscribers and ARR for monthly revenue over time.
