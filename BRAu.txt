@@ -1,0 +1,76 @@
+Bookings Report Project Documentation
+Overview
+This document outlines the structure and logic required for creating reports in QuickSight for two carriers: United Healthcare and SelectHealth. These reports will include details on new groups, terminations, and overall bookings summaries. Users will have the ability to drill down into specific markets or states to gain detailed insights.
+
+Sheet 1: New Groups
+The first sheet focuses on tracking both the number of new Medical subscribers and the number of new groups for United Healthcare, broken down by major markets and minor markets on a monthly basis. This sheet provides comprehensive insights into the growth of new subscribers and the formation of new groups.
+
+The columns for this sheet include:
+
+Month: The specific month for which the data is recorded.
+Major Market: The primary market, such as Florida Market or Illinois Market.
+Minor Market: Sub-markets within the primary market, for example, Orlando or Tampa within the Florida Market.
+Group Name: The name of the group subscribing to the medical services.
+Market Segment: The size of the group, such as 2-50 people.
+New Medical Subscribers: The number of new Medical subscribers for the given month.
+New Groups: The number of new groups for the month.
+Total New Groups: The cumulative total of new groups for the month.
+Running Total (Major Market Level): A cumulative count of new Medical subscribers, tracked monthly at the major market level.
+The logic for this sheet involves ensuring that the sum of new Medical subscribers for minor markets equals the total for the corresponding major market. For example, if the Northeastern major market includes Connecticut with 920 subscribers, Rhode Island with 180 subscribers, and Massachusetts with 200 subscribers, the total for the Northeastern major market would be 1,300 subscribers. Similarly, users should be able to filter data by market segment, allowing them to see specific groups based on size. The running total will be maintained on a monthly basis at the major market level, excluding minor markets as they are components of the major market total.
+
+Sheet 2: Terminations
+The second sheet mirrors the structure and logic of the first sheet but focuses on tracking terminations. It provides insights into the number of terminations for each major market and its minor markets on a monthly basis.
+
+The columns for this sheet are similar:
+
+Month: The specific month for which the data is recorded.
+Major Market: The primary market.
+Minor Market: Sub-markets within the primary market.
+Group Name: The name of the group whose subscription is being terminated.
+Market Segment: The size of the group.
+Terminations: The number of terminations for the given month.
+Total Terminations: The cumulative total of terminations for the month.
+Running Total (Major Market Level): A cumulative count of terminations, tracked monthly at the major market level.
+The logic follows the same pattern as the new groups sheet, ensuring data consistency and usability across both metrics.
+
+Sheet 3: Bookings Report
+The third sheet provides a summary of new Medical subscribers, terminations, and calculates net changes, revenue, and deviations. This sheet offers a comprehensive view of the bookings, integrating multiple metrics for detailed analysis.
+
+The columns include:
+
+Month: The specific month for which the data is recorded.
+Major Market: The primary market.
+Minor Market: Sub-markets within the primary market.
+New Medical Subscribers: The number of new Medical subscribers for the given month.
+Terminations: The number of terminations for the given month.
+Net Delta Medical Subscribers: The net change in Medical subscribers, calculated as New Medical Subscribers minus Terminations.
+Monthly Fee: The monthly fee calculated based on the net change in Medical subscribers.
+Monthly Revenue: The revenue generated monthly.
+Annual Recurring Revenue (ARR): The annual revenue based on monthly calculations.
+Calculations for this sheet are straightforward. The Net Delta Medical Subscribers is calculated by subtracting terminations from new Medical subscribers. The Monthly Fee is calculated based on the carrier:
+
+For United Healthcare, the Monthly Fee is the product of the Net Delta Medical Subscribers and $2.30.
+For SelectHealth, the Monthly Fee is the product of the Net Delta Medical Subscribers and $2.
+Monthly Revenue is the same as the Monthly Fee, and the Annual Recurring Revenue is Monthly Revenue multiplied by 12.
+
+Deviation tracking involves monitoring the minimum number of Medical subscribers each month against the agreed contract number of 43,760 subscribers for United Healthcare. The agreed contract number should be prominently displayed at the top of the report for reference. The deviation is calculated as the difference between the current month's subscriber count and the minimum agreed number.
+
+Example Calculations:
+
+If the end of January's count is 47,674, which is greater than the agreed number of 43,760, the new minimum becomes 47,674. The deviation is 47,674 - 43,760 = 3,914. The Monthly Fee is 47,674 * $2.30, and the ARR is the Monthly Fee * 12.
+If the end of February's count is 47,150, which is less than the new minimum of 47,674, the deviation is 47,150 - 47,674 = -524. The Monthly Fee remains based on the minimum of 47,674, and the ARR is calculated accordingly.
+If the end of March's count is 47,044, which is less than the new minimum of 47,674, the deviation is 47,044 - 47,674 = -630. The Monthly Fee remains based on the minimum of 47,674, and the ARR is calculated accordingly.
+If the end of April's count is 48,550, which is greater than the previous minimum of 47,674, the new minimum becomes 48,550. The deviation is 48,550 - 47,674 = 876. The Monthly Fee is 48,550 * $2.30, and the ARR is the Monthly Fee * 12.
+SelectHealth Reports
+The SelectHealth reports follow the same logic and structure as United Healthcare reports but are tracked at the state level (Utah and Nevada) instead of major markets and minor markets.
+
+For SelectHealth, the columns for all sheets include:
+
+Month: The specific month for which the data is recorded.
+State: The state being tracked (Utah or Nevada).
+Group Name: The name of the group subscribing to the medical services.
+Market Segment: The size of the group.
+New Medical Subscribers / Terminations / Net Delta Medical Subscribers / Monthly Fee / Monthly Revenue / ARR: Corresponding data points for each metric.
+Deviation tracking applies the same logic to the states of Utah and Nevada, ensuring consistency across all reports.
+
+This documentation provides a comprehensive guide for creating detailed and consistent reports in QuickSight for both United Healthcare and SelectHealth. The guidelines ensure that users can track, analyze, and visualize data effectively, allowing for insightful decision-making based on accurate and up-to-date information.
