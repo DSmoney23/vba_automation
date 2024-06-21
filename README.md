@@ -1,3 +1,5 @@
+
+Copy code
 import streamlit as st
 import pandas as pd
 import base64
@@ -5,7 +7,7 @@ import base64
 # Load existing data
 file_path = 'UHC_Brokers_MNL_Partners.xlsx'
 
-@st.cache_data
+@st.cache_resource
 def load_data(file_path):
     return pd.read_excel(file_path)
 
@@ -56,11 +58,10 @@ with st.form(key='data_form'):
 if submit_button:
     if uhc_broker and mnl_partner:
         new_row = pd.DataFrame({'UHC Brokers': [uhc_broker], 'MNL Partner': [mnl_partner]})
-        df = df.append(new_row, ignore_index=True)
+        df = pd.concat([df, new_row], ignore_index=True)
         save_data(df, file_path)
         st.success('✅ New row added successfully!')
-        st.subheader('🔄 Updated Data:')
-        st.dataframe(df, use_container_width=True)
+        st.experimental_rerun()
     else:
         st.error('⚠️ Please fill out both fields.')
 
@@ -68,7 +69,7 @@ if submit_button:
 def get_table_download_link(file_path):
     with open(file_path, 'rb') as f:
         b64 = base64.b64encode(f.read()).decode()
-    href = f'<a href="data:file/txt;base64,{b64}" download="UHC_Brokers_MNL_Partners.xlsx">Download Updated Excel File</a>'
+    href = f'<a href="data:application/octet-stream;base64,{b64}" download="UHC_Brokers_MNL_Partners.xlsx">Download Updated Excel File</a>'
     return href
 
 st.markdown('### 📥 Download the updated file:')
