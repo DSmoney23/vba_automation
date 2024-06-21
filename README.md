@@ -1,5 +1,3 @@
-
-Copy code
 import streamlit as st
 import pandas as pd
 import base64
@@ -61,7 +59,8 @@ if submit_button:
         df = pd.concat([df, new_row], ignore_index=True)
         save_data(df, file_path)
         st.success('✅ New row added successfully!')
-        st.experimental_rerun()
+        # Use query params to force a rerun
+        st.experimental_set_query_params()
     else:
         st.error('⚠️ Please fill out both fields.')
 
