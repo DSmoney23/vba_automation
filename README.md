@@ -3,7 +3,7 @@ import pandas as pd
 import base64
 
 # Load existing data
-file_path = 'UHC_Brokers_MNL_Partners.xlsx'
+file_path = r'C:\Users\john.smith\documents\streamlit_file.xlsx'
 
 @st.cache_resource
 def load_data(file_path):
@@ -17,7 +17,7 @@ def save_data(data, file_path):
 def get_table_download_link(file_path):
     with open(file_path, 'rb') as f:
         b64 = base64.b64encode(f.read()).decode()
-    href = f'<a href="data:application/octet-stream;base64,{b64}" download="UHC_Brokers_MNL_Partners.xlsx">Download Updated Excel File</a>'
+    href = f'<a href="data:application/octet-stream;base64,{b64}" download="streamlit_file.xlsx">Download Updated Excel File</a>'
     return href
 
 # Streamlit UI
@@ -75,15 +75,6 @@ st.markdown(
     """,
     unsafe_allow_html=False
 )
-
-# Sidebar
-st.sidebar.image('https://via.placeholder.com/150', use_column_width=True)
-st.sidebar.title("Navigation")
-st.sidebar.markdown("""
-- [Current Data](#current-data)
-- [Add New Data](#add-new-data)
-- [Download File](#download-the-updated-file)
-""")
 
 # Main Content
 st.markdown('<div class="title">🔄 UHC Brokers and MNL Partners Update Portal</div>', unsafe_allow_html=False)
