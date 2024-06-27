@@ -27,7 +27,7 @@ st.set_page_config(page_title='UHC Brokers & MNL Partners', layout='wide')
 st.markdown(
     """
     <style>
-    body {
+    .stApp {
         background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
         font-family: 'Arial', sans-serif;
     }
@@ -73,19 +73,19 @@ st.markdown(
     }
     </style>
     """,
-    unsafe_allow_html=False
+    unsafe_allow_html=True
 )
 
 # Main Content
-st.markdown('<div class="title">🔄 UHC Brokers and MNL Partners Update Portal</div>', unsafe_allow_html=False)
+st.markdown('<div class="title">🔄 UHC Brokers and MNL Partners Update Portal</div>', unsafe_allow_html=True)
 
 # Display existing data
 df = load_data(file_path)
-st.markdown('<div class="subtitle">📊 Current Data:</div>', unsafe_allow_html=False)
+st.markdown('<div class="subtitle">📊 Current Data:</div>', unsafe_allow_html=True)
 st.dataframe(df[['MNL Partner ID', 'MNL Partner', 'UHC Agency', 'Month', 'SF Partner ID']], use_container_width=True, height=400)
 
 # Input form for new data
-st.markdown('<div class="subtitle">📝 Add New Data:</div>', unsafe_allow_html=False)
+st.markdown('<div class="subtitle">📝 Add New Data:</div>', unsafe_allow_html=True)
 with st.form(key='data_form'):
     col1, col2 = st.columns(2)
     with col1:
@@ -112,11 +112,11 @@ if submit_button:
         st.success('✅ New row added successfully!')
         # Reload the data to display the updated DataFrame
         df = load_data(file_path)
-        st.markdown('<div class="subtitle">🔄 Updated Data:</div>', unsafe_allow_html=False)
+        st.markdown('<div class="subtitle">🔄 Updated Data:</div>', unsafe_allow_html=True)
         st.dataframe(df[['MNL Partner ID', 'MNL Partner', 'UHC Agency', 'Month', 'SF Partner ID']], use_container_width=True, height=400)
     else:
         st.error('⚠️ Please fill out all fields.')
 
 # Display download link for updated file
-st.markdown('<div class="subtitle">📥 Download the updated file:</div>', unsafe_allow_html=False)
-st.markdown(get_table_download_link(file_path), unsafe_allow_html=False)
+st.markdown('<div class="subtitle">📥 Download the updated file:</div>', unsafe_allow_html=True)
+st.markdown(get_table_download_link(file_path), unsafe_allow_html=True)
