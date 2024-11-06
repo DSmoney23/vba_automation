@@ -1,8 +1,10 @@
+```python
 import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import re
+
 
 def preprocess_text(text):
     """Clean and standardize text for better matching"""
@@ -15,6 +17,7 @@ def preprocess_text(text):
     # Remove extra whitespace
     text = ' '.join(text.split())
     return text
+
 
 def calculate_similarity_scores(series1, series2):
     """Calculate cosine similarity between two series of text"""
@@ -38,20 +41,33 @@ def calculate_similarity_scores(series1, series2):
     
     return similarities
 
+
 def find_best_matches(mass_term_df, nov_lf_df):
     """Find best matches between the two dataframes"""
     # Calculate similarity scores for each field
     print("Calculating name similarities...")
-    name_similarities = calculate_similarity_scores(mass_term_df['name'], nov_lf_df['Group Name'])
+    name_similarities = calculate_similarity_scores(
+        mass_term_df['name'], 
+        nov_lf_df['Group Name']
+    )
     
     print("Calculating city similarities...")
-    city_similarities = calculate_similarity_scores(mass_term_df['l_city'], nov_lf_df['Group City'])
+    city_similarities = calculate_similarity_scores(
+        mass_term_df['l_city'], 
+        nov_lf_df['Group City']
+    )
     
     print("Calculating state similarities...")
-    state_similarities = calculate_similarity_scores(mass_term_df['l_state'], nov_lf_df['Group State'])
+    state_similarities = calculate_similarity_scores(
+        mass_term_df['l_state'], 
+        nov_lf_df['Group State']
+    )
     
     print("Calculating zip similarities...")
-    zip_similarities = calculate_similarity_scores(mass_term_df['l_zip'], nov_lf_df['Group Zip Code'])
+    zip_similarities = calculate_similarity_scores(
+        mass_term_df['l_zip'], 
+        nov_lf_df['Group Zip Code']
+    )
     
     # Initialize lists to store best matches
     best_matches = []
@@ -86,6 +102,7 @@ def find_best_matches(mass_term_df, nov_lf_df):
     
     return result_df
 
+
 def main():
     try:
         # Read the input files
@@ -110,5 +127,7 @@ def main():
         print(f"An error occurred: {str(e)}")
         raise
 
+
 if __name__ == "__main__":
     main()
+```
