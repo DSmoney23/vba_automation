@@ -1,3 +1,4 @@
+```sql
 WITH ActivePlatIDs AS (
     SELECT platform_id
     FROM "m-datawarehouse"."current_companies_expanded"
@@ -35,4 +36,3 @@ SELECT *
 FROM RankedRecords
 WHERE rn = 1
 ORDER BY process_date DESC;
-
