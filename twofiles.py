@@ -5,11 +5,15 @@ def load_verified_carrier_data(file_path):
     return pd.read_excel(file_path)
 
 def scenario_1(verified_carrier_table):
-    """Identify the list of customer_id for each unique matching_platform_company_id and count occurrences."""
+    """Identify the list of customer_id, group_name, and broker_agency_name for each unique matching_platform_company_id and count occurrences."""
     grouped = verified_carrier_table.groupby([
         'matching_platform_company_id', 'matching_company_name', 
         'matching_platform_partner_id', 'matching_partner_name', 'has_aca_sku'
-    ])['customer_id'].apply(list).reset_index()
+    ]).agg({
+        'customer_id': list,
+        'group_name': list,
+        'broker_agency_name': list
+    }).reset_index()
     grouped['customer_count'] = grouped['customer_id'].apply(len)
     return grouped
 
