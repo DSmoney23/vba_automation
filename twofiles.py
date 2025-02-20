@@ -53,13 +53,27 @@ def analyze_overlap(scenario_1_df, scenario_2_df):
     return overlap_df
 
 def scenario_3(company_additional_data):
-    """Identify the list of MNL Company ID, MNL Company Name, MNL Partner ID, MNL Partner Name for each matching platform company ID."""
+    """Identify the list of company_id for each unique MNL Company ID and count occurrences."""
     grouped = company_additional_data.groupby([
         'MNL Company ID', 'MNL Company Name', 'MNL Partner ID', 'MNL Partner Name', 'has_aca_sku'
     ]).agg({
-        'matching_platform_company_id': list
+        'company_id': list
     }).reset_index()
-    grouped['company_count'] = grouped['matching_platform_company_id'].apply(len)
+    grouped['company_count'] = grouped['company_id'].apply(len)
+    return grouped
+
+def scenario_4(company_additional_data):
+    """Identify the list of MNL Company details for each company_id while keeping details grouped similarly to scenario 1."""
+    grouped = company_additional_data.groupby([
+        'company_id'
+    ]).agg({
+        'MNL Company ID': list,
+        'MNL Company Name': list,
+        'MNL Partner ID': list,
+        'MNL Partner Name': list,
+        'has_aca_sku': list
+    }).reset_index()
+    grouped['mnl_count'] = grouped['MNL Company ID'].apply(len)
     return grouped
 
 def main():
@@ -72,6 +86,7 @@ def main():
     scenario_1_df = scenario_1(verified_carrier_table)
     scenario_2_df = scenario_2(verified_carrier_table)
     scenario_3_df = scenario_3(company_additional_data)
+    scenario_4_df = scenario_4(company_additional_data)
     
     overlap_df = analyze_overlap(scenario_1_df, scenario_2_df)
     
@@ -79,11 +94,13 @@ def main():
     scenario_1_df.to_excel("scenario_1_output.xlsx", index=False)
     scenario_2_df.to_excel("scenario_2_output.xlsx", index=False)
     scenario_3_df.to_excel("scenario_3_output.xlsx", index=False)
+    scenario_4_df.to_excel("scenario_4_output.xlsx", index=False)
     overlap_df.to_excel("overlap_analysis.xlsx", index=False)
     
     print("Scenario 1 output saved to scenario_1_output.xlsx")
     print("Scenario 2 output saved to scenario_2_output.xlsx")
     print("Scenario 3 output saved to scenario_3_output.xlsx")
+    print("Scenario 4 output saved to scenario_4_output.xlsx")
     print("Overlap analysis saved to overlap_analysis.xlsx")
 
 if __name__ == "__main__":
