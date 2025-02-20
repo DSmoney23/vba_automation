@@ -5,21 +5,23 @@ def load_verified_carrier_data(file_path):
     return pd.read_excel(file_path)
 
 def scenario_1(verified_carrier_table):
-    """Identify the list of customer_id for each unique matching_platform_company_id."""
-    scenario_1_df = verified_carrier_table.groupby([
+    """Identify the list of customer_id for each unique matching_platform_company_id and count occurrences."""
+    grouped = verified_carrier_table.groupby([
         'matching_platform_company_id', 'matching_company_name', 
         'matching_platform_partner_id', 'matching_partner_name', 'has_aca_sku'
-    ])['customer_id'].unique().explode().reset_index()
-    return scenario_1_df
+    ])['customer_id'].apply(list).reset_index()
+    grouped['customer_count'] = grouped['customer_id'].apply(len)
+    return grouped
 
 def scenario_2(verified_carrier_table):
-    """Identify the list of matching_platform_company_id for each customer_id while keeping records distinct."""
-    scenario_2_df = verified_carrier_table[[
-        'customer_id', 'group_name', 'broker_agency_name', 
-        'matching_platform_company_id', 'matching_company_name', 
-        'matching_platform_partner_id', 'matching_partner_name', 'has_aca_sku'
-    ]].drop_duplicates()
-    return scenario_2_df
+    """Identify the list of matching_platform_company_id for each customer_id, count occurrences, and include duplicates."""
+    grouped = verified_carrier_table.groupby([
+        'customer_id', 'group_name', 'broker_agency_name'
+    ])[['matching_platform_company_id', 'matching_company_name', 
+        'matching_platform_partner_id', 'matching_partner_name', 'has_aca_sku']].apply(lambda x: x.values.tolist()).reset_index()
+    grouped.rename(columns={0: 'matching_companies'}, inplace=True)
+    grouped['matching_count'] = grouped['matching_companies'].apply(len)
+    return grouped
 
 def main():
     file_path_2 = "verified_carrier_table.xlsx"
