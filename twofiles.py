@@ -18,13 +18,12 @@ def scenario_1(verified_carrier_table):
     return grouped
 
 def scenario_2(verified_carrier_table):
-    """Identify the list of matching_platform_company_id for each customer_id, count occurrences, and include duplicates."""
-    grouped = verified_carrier_table.groupby([
-        'customer_id', 'group_name', 'broker_agency_name'
-    ])[['matching_platform_company_id', 'matching_company_name', 
-        'matching_platform_partner_id', 'matching_partner_name', 'has_aca_sku']].apply(lambda x: x.values.tolist()).reset_index()
-    grouped.rename(columns={0: 'matching_companies'}, inplace=True)
-    grouped['matching_count'] = grouped['matching_companies'].apply(len)
+    """Identify the list of matching_platform_company_id for each customer_id, count occurrences, and break out details individually."""
+    exploded_df = verified_carrier_table[['customer_id', 'group_name', 'broker_agency_name', 
+                                          'matching_platform_company_id', 'matching_company_name', 
+                                          'matching_platform_partner_id', 'matching_partner_name', 'has_aca_sku']]
+    grouped = exploded_df.groupby(['customer_id', 'group_name', 'broker_agency_name']).apply(lambda x: x.reset_index(drop=True)).reset_index(drop=True)
+    grouped['matching_count'] = grouped.groupby(['customer_id'])['matching_platform_company_id'].transform('count')
     return grouped
 
 def main():
