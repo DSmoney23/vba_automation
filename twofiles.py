@@ -18,8 +18,12 @@ def scenario_1(verified_carrier_table):
     return grouped
 
 def scenario_2(verified_carrier_table):
-    """Identify the list of matching_platform_company_id for each customer_id while keeping group_name and broker_agency_name grouped similarly to scenario 1."""
-    grouped = verified_carrier_table.groupby([
+    """Keep only the latest record per customer_id based on process_date and save duplicates separately."""
+    verified_carrier_table = verified_carrier_table.sort_values(by=['customer_id', 'process_date'], ascending=[True, False])
+    latest_records = verified_carrier_table.drop_duplicates(subset=['customer_id'], keep='first')
+    duplicate_records = verified_carrier_table[verified_carrier_table.duplicated(subset=['customer_id'], keep=False)]
+    
+    grouped = latest_records.groupby([
         'customer_id', 'group_name', 'broker_agency_name'
     ]).agg({
         'matching_platform_company_id': list,
@@ -29,7 +33,8 @@ def scenario_2(verified_carrier_table):
         'has_aca_sku': list
     }).reset_index()
     grouped['matching_count'] = grouped['matching_platform_company_id'].apply(len)
-    return grouped
+    
+    return grouped, duplicate_records
 
 def scenario_3(company_additional_data):
     """Identify the list of company_id for each unique MNL Company ID and count occurrences."""
