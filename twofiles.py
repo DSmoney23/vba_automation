@@ -1,7 +1,7 @@
 import pandas as pd
 
 def load_data(file_path):
-    """Load the verified carrier table or company additional data into a DataFrame."""
+    """Load an Excel file into a DataFrame."""
     return pd.read_excel(file_path)
 
 def scenario_1(verified_carrier_table):
@@ -31,31 +31,10 @@ def scenario_2(verified_carrier_table):
     grouped['matching_count'] = grouped['matching_platform_company_id'].apply(len)
     return grouped
 
-def analyze_overlap(scenario_1_df, scenario_2_df):
-    """Analyze overlapping customer_id between scenario 1 and scenario 2."""
-    overlap_results = []
-    
-    for _, row in scenario_1_df.iterrows():
-        matching_company_id = row['matching_platform_company_id']
-        customers_in_scenario_1 = set(row['customer_id'])
-        
-        for _, row2 in scenario_2_df.iterrows():
-            if row2['customer_id'] in customers_in_scenario_1:
-                overlap_results.append({
-                    'customer_id': row2['customer_id'],
-                    'group_name': row2['group_name'],
-                    'broker_agency_name': row2['broker_agency_name'],
-                    'matching_platform_company_id': matching_company_id,
-                    'overlap_with_scenario_1': True
-                })
-    
-    overlap_df = pd.DataFrame(overlap_results)
-    return overlap_df
-
 def scenario_3(company_additional_data):
     """Identify the list of company_id for each unique MNL Company ID and count occurrences."""
     grouped = company_additional_data.groupby([
-        'MNL Company ID', 'MNL Company Name', 'MNL Partner ID', 'MNL Partner Name', 'has_aca_sku'
+        'MNL Company ID', 'MNL Company Name', 'MNL Partner ID', 'MNL Partner Name'
     ]).agg({
         'company_id': list
     }).reset_index()
@@ -65,7 +44,7 @@ def scenario_3(company_additional_data):
 def scenario_4(company_additional_data):
     """Identify the list of MNL Company details for each company_id while keeping details grouped similarly to scenario 1."""
     grouped = company_additional_data.groupby([
-        'company_id'
+        'UHC Company ID'
     ]).agg({
         'MNL Company ID': list,
         'MNL Company Name': list,
@@ -76,10 +55,34 @@ def scenario_4(company_additional_data):
     grouped['mnl_count'] = grouped['MNL Company ID'].apply(len)
     return grouped
 
+def merge_master_file(file_master, scenario_2_df, scenario_4_df):
+    """Merge master file with scenario 2 and scenario 4 data."""
+    file_master = file_master.merge(scenario_2_df, left_on='Customer ID', right_on='customer_id', how='left')
+    file_master = file_master.merge(scenario_4_df, left_on='matching_platform_company_id', right_on='UHC Company ID', how='left')
+    
+    # Rename columns to final format
+    file_master.rename(columns={
+        'matching_platform_company_id': 'matching_platform_company_id',
+        
+        'matching_company_name': 'matching_company_name',
+        'matching_platform_partner_id': 'matching_platform_partner_id',
+        'matching_partner_name': 'matching_partner_name',
+        'has_aca_sku_x': 'has_aca_sku',
+        'has_aca_sku_y': 'has_aca_sku (Additional_comp)',
+        'MNL Company ID': 'MNL Company ID (Additional_comp)',
+        'MNL Company Name': 'MNL Company Name (Additional_comp)',
+        'MNL Partner ID': 'MNL Partner ID (Additional_comp)',
+        'MNL Partner Name': 'MNL Partner Name (Additional_comp)'
+    }, inplace=True)
+    
+    return file_master
+
 def main():
+    file_path_master = "file_master.xlsx"
     file_path_2 = "verified_carrier_table.xlsx"
     file_path_1 = "company_additional_data.xlsx"
     
+    file_master = load_data(file_path_master)
     verified_carrier_table = load_data(file_path_2)
     company_additional_data = load_data(file_path_1)
     
@@ -88,20 +91,20 @@ def main():
     scenario_3_df = scenario_3(company_additional_data)
     scenario_4_df = scenario_4(company_additional_data)
     
-    overlap_df = analyze_overlap(scenario_1_df, scenario_2_df)
+    file_master = merge_master_file(file_master, scenario_2_df, scenario_4_df)
     
     # Save the results
+    file_master.to_excel("file_master_output.xlsx", index=False)
     scenario_1_df.to_excel("scenario_1_output.xlsx", index=False)
     scenario_2_df.to_excel("scenario_2_output.xlsx", index=False)
     scenario_3_df.to_excel("scenario_3_output.xlsx", index=False)
     scenario_4_df.to_excel("scenario_4_output.xlsx", index=False)
-    overlap_df.to_excel("overlap_analysis.xlsx", index=False)
     
+    print("Master file output saved to file_master_output.xlsx")
     print("Scenario 1 output saved to scenario_1_output.xlsx")
     print("Scenario 2 output saved to scenario_2_output.xlsx")
     print("Scenario 3 output saved to scenario_3_output.xlsx")
     print("Scenario 4 output saved to scenario_4_output.xlsx")
-    print("Overlap analysis saved to overlap_analysis.xlsx")
 
 if __name__ == "__main__":
     main()
