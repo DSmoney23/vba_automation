@@ -18,12 +18,17 @@ def scenario_1(verified_carrier_table):
     return grouped
 
 def scenario_2(verified_carrier_table):
-    """Identify the list of matching_platform_company_id for each customer_id, count occurrences, and break out details individually."""
-    exploded_df = verified_carrier_table[['customer_id', 'group_name', 'broker_agency_name', 
-                                          'matching_platform_company_id', 'matching_company_name', 
-                                          'matching_platform_partner_id', 'matching_partner_name', 'has_aca_sku']]
-    grouped = exploded_df.groupby(['customer_id', 'group_name', 'broker_agency_name']).apply(lambda x: x.reset_index(drop=True)).reset_index(drop=True)
-    grouped['matching_count'] = grouped.groupby(['customer_id'])['matching_platform_company_id'].transform('count')
+    """Identify the list of matching_platform_company_id for each customer_id while keeping group_name and broker_agency_name grouped similarly to scenario 1."""
+    grouped = verified_carrier_table.groupby([
+        'customer_id', 'group_name', 'broker_agency_name'
+    ]).agg({
+        'matching_platform_company_id': list,
+        'matching_company_name': list,
+        'matching_platform_partner_id': list,
+        'matching_partner_name': list,
+        'has_aca_sku': list
+    }).reset_index()
+    grouped['matching_count'] = grouped['matching_platform_company_id'].apply(len)
     return grouped
 
 def main():
